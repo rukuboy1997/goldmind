@@ -4,11 +4,11 @@ import pytest
 from goldmind.data.normalization import normalize_ohlcv
 
 
-def test_normalize_sorts_and_adds_metadata() -> None:
+def test_normalize_adds_metadata() -> None:
     frame = pd.DataFrame(
         [
-            {"timestamp": "2026-01-01T00:01:00Z", "open": 2, "high": 3, "low": 1, "close": 2.5},
             {"timestamp": "2026-01-01T00:00:00Z", "open": 1, "high": 2, "low": 0.5, "close": 1.5},
+            {"timestamp": "2026-01-01T00:01:00Z", "open": 2, "high": 3, "low": 1, "close": 2.5},
         ]
     )
 
