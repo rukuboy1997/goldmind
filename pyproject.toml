@@ -19,7 +19,7 @@ research = [
     "jupyter>=1.0,<2",
 ]
 mt5 = [
-    "MetaTrader5>=5.0.0",
+    "MetaTrader5>=5.0.0; platform_system == "Windows"",
 ]
 dev = [
     "pytest>=8,<9",
