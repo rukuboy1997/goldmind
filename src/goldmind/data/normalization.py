@@ -40,10 +40,10 @@ def normalize_ohlcv(
         duplicates = result.loc[result["timestamp"].duplicated(keep=False), "timestamp"]
         raise ValueError(f"duplicate timestamps detected: {duplicates.iloc[0].isoformat()}")
 
-    result = result.sort_values("timestamp").reset_index(drop=True)
-
     if not result["timestamp"].is_monotonic_increasing:
-        raise ValueError("timestamps are not ordered")
+        raise ValueError("timestamps are out of order")
+
+    result = result.reset_index(drop=True)
 
     if (result["high"] < result[["open", "close"]].max(axis=1)).any():
         raise ValueError("high is below open/close")
