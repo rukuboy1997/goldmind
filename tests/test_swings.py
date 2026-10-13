@@ -74,9 +74,7 @@ def test_too_short_frame_returns_no_pivots() -> None:
 def test_invalid_window_sizes_are_rejected(left_bars: int, right_bars: int) -> None:
     frame = make_frame(highs=[2, 3, 2], lows=[1, 2, 1])
 
-    with pytest.raises(ValueError, match=
-        "positive integer"
-    ):
+    with pytest.raises(ValueError, match="positive integer"):
         find_swings(frame, left_bars=left_bars, right_bars=right_bars)
 
 
