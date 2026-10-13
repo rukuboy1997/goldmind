@@ -68,6 +68,7 @@ def test_wick_through_without_close_does_not_count_as_break() -> None:
     bars.loc[4, "high"] = 13.0
     bars.loc[4, "close"] = 11.0
     bars.loc[5, "close"] = 11.5
+    bars.loc[5, "low"] = 11.0
     swings = make_swings(bars).iloc[[0]].reset_index(drop=True)
 
     events = detect_structure_breaks(bars, swings)
