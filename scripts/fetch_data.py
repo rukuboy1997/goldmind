@@ -28,7 +28,7 @@ def main() -> None:
     parser.add_argument(
         "--end",
         required=True,
-        help="UTC datetime, e.g. 2026-01-31T23:59:59+00:00",
+        help="Exclusive UTC end datetime, e.g. 2026-01-02T00:00:00+00:00",
     )
     parser.add_argument("--output", default=None)
     args = parser.parse_args()
@@ -46,6 +46,12 @@ def main() -> None:
         symbol=args.symbol,
         timeframe=args.timeframe,
     )
+
+    # MT5 may include the candle opening exactly at --end; use [start, end)
+    # so requests for a calendar day don't include the next day's 00:00 bar.
+    normalized = normalized.loc[normalized["timestamp"] < end].reset_index(drop=True)
+    if normalized.empty:
+        raise ValueError("No bars found inside the requested [start, end) interval")
 
     output = Path(
         args.output
