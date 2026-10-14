@@ -104,3 +104,35 @@ def test_duplicate_timestamps_are_rejected() -> None:
 
     with pytest.raises(ValueError, match="unique"):
         detect_fair_value_gaps(bars)
+
+
+@pytest.mark.parametrize(
+    "timestamps",
+    [
+        [
+            "2026-10-12T00:00:00Z",
+            "2026-10-12T00:05:00Z",
+            "2026-10-12T01:15:00Z",
+        ],
+        [
+            "2026-10-12T00:00:00Z",
+            "2026-10-12T01:10:00Z",
+            "2026-10-12T01:15:00Z",
+        ],
+    ],
+)
+def test_fvg_is_not_created_across_time_gaps(timestamps: list[str]) -> None:
+    bars = make_bars(
+        [
+            (100.0, 101.0, 99.0, 100.0),
+            (101.0, 106.0, 100.0, 105.0),
+            (106.0, 108.0, 102.0, 107.0),
+        ]
+    )
+    bars["timestamp"] = pd.to_datetime(timestamps, utc=True)
+    bars["timeframe"] = "M5"
+
+    result = detect_fair_value_gaps(bars)
+
+    assert result.empty
+
