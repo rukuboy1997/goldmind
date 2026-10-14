@@ -5,6 +5,7 @@ from pathlib import Path
 
 from goldmind.data.storage import load_ohlcv
 from goldmind.structure import (
+    detect_fair_value_gaps,
     detect_liquidity_sweeps,
     detect_structure_breaks,
     find_swings,
@@ -13,11 +14,12 @@ from goldmind.structure import (
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Analyze confirmed swings, BOS/CHOCH, and liquidity sweeps from a GoldMind Parquet dataset."
+        description="Analyze swings, BOS/CHOCH, liquidity sweeps, and FVGs from a GoldMind Parquet dataset."
     )
     parser.add_argument("--input", default="data/processed/XAUUSDmicro_M5.parquet")
     parser.add_argument("--left-bars", type=int, default=2)
     parser.add_argument("--right-bars", type=int, default=2)
+    parser.add_argument("--min-fvg-size", type=float, default=0.0)
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -29,12 +31,14 @@ def main() -> None:
     )
     structure_events = detect_structure_breaks(bars, swings)
     liquidity_events = detect_liquidity_sweeps(bars, swings)
+    fvgs = detect_fair_value_gaps(bars, min_gap_size=args.min_fvg_size)
 
     print(f"Input: {input_path}")
     print(f"Candles: {len(bars):,}")
     print(f"Confirmed swing points: {len(swings):,}")
     print(f"Structure breaks: {len(structure_events):,}")
     print(f"Liquidity sweeps: {len(liquidity_events):,}")
+    print(f"Fair Value Gaps: {len(fvgs):,}")
 
     if swings.empty:
         print("\nNo confirmed swing points found.")
@@ -53,6 +57,12 @@ def main() -> None:
     else:
         print("\nLiquidity sweeps:")
         print(liquidity_events.to_string(index=False))
+
+    if fvgs.empty:
+        print("\nNo FVGs found in this dataset.")
+    else:
+        print("\nMost recent FVGs:")
+        print(fvgs.tail(20).to_string(index=False))
 
 
 if __name__ == "__main__":
