@@ -221,6 +221,23 @@ def detect_confluence_candidates(
 
     if not candidates:
         return pd.DataFrame(columns=CONFLUENCE_COLUMNS)
-    return pd.DataFrame(candidates, columns=CONFLUENCE_COLUMNS).sort_values(
+
+    result = pd.DataFrame(candidates, columns=CONFLUENCE_COLUMNS)
+
+    # A single CHOCH + FVG sequence may qualify against multiple same-direction
+    # sweeps. Count it once and attach the most recent eligible sweep, avoiding
+    # duplicate candidate counts for the same apparent setup.
+    result = result.sort_values(
+        ["structure_bar_index", "fvg_right_index", "sweep_bar_index"],
+        ascending=[True, True, False],
+        kind="stable",
+    )
+    result = result.drop_duplicates(
+        subset=["direction", "structure_bar_index", "fvg_right_index"],
+        keep="first",
+    )
+    result = result.sort_values(
         ["signal_bar_index", "sweep_bar_index"], kind="stable"
     ).reset_index(drop=True)
+    result["candidate_id"] = range(1, len(result) + 1)
+    return result
