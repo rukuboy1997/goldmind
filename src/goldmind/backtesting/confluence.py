@@ -206,12 +206,10 @@ def simulate_confluence_backtest(
                 side_open = open_prices[bar_index]
                 side_high = high_prices[bar_index]
                 side_low = low_prices[bar_index]
-                side_close = close_prices[bar_index]
             else:
                 side_open = open_prices[bar_index] + bar_spread
                 side_high = high_prices[bar_index] + bar_spread
                 side_low = low_prices[bar_index] + bar_spread
-                side_close = close_prices[bar_index] + bar_spread
 
             stop_at_open = side_open <= stop_price if direction == "BULLISH" else side_open >= stop_price
             target_at_open = side_open >= target_price if direction == "BULLISH" else side_open <= target_price
