@@ -18,6 +18,34 @@ FVG_COLUMNS = (
     "gap_size",
 )
 
+_TIMEFRAME_INTERVALS = {
+    "M1": pd.Timedelta(minutes=1),
+    "M5": pd.Timedelta(minutes=5),
+    "M15": pd.Timedelta(minutes=15),
+    "H1": pd.Timedelta(hours=1),
+    "H4": pd.Timedelta(hours=4),
+}
+
+
+def _expected_bar_interval(bars: pd.DataFrame, timestamps: pd.Series) -> pd.Timedelta:
+    """Infer the nominal candle interval, preferring explicit MT5 metadata."""
+    if "timeframe" in bars.columns:
+        frame_values = bars["timeframe"].dropna().astype(str).str.upper().unique()
+        if len(frame_values) > 1:
+            raise ValueError("FVG detection requires a single timeframe")
+        if len(frame_values) == 1 and frame_values[0] in _TIMEFRAME_INTERVALS:
+            return _TIMEFRAME_INTERVALS[frame_values[0]]
+
+    deltas = timestamps.diff().dropna()
+    deltas = deltas[deltas > pd.Timedelta(0)]
+    if deltas.empty:
+        raise ValueError("cannot infer the candle interval from timestamps")
+    counts = deltas.value_counts()
+    most_common = counts[counts == counts.max()].index
+    # On a tie, choose the shortest common interval so a session gap is not
+    # mistaken for the nominal candle spacing.
+    return min(most_common)
+
 
 def detect_fair_value_gaps(
     bars: pd.DataFrame,
@@ -29,9 +57,10 @@ def detect_fair_value_gaps(
     Bullish: current low is above the high two candles earlier.
     Bearish: current high is below the low two candles earlier.
 
-    The FVG is recorded only when its third candle is present. ``formed_at``
-    uses that candle's timestamp; no later candles are required to identify
-    the initial zone. This function does not decide whether the zone remains
+    The three candles must have contiguous timestamps at the nominal bar
+    interval. Patterns that straddle missing candles, session breaks, or
+    weekends are ignored. The FVG is recorded when its third candle is
+    present. This function does not decide whether the zone remains
     unmitigated, offers a trade, or has predictive value.
     """
     if isinstance(min_gap_size, bool) or not isinstance(min_gap_size, (int, float)):
@@ -55,6 +84,9 @@ def detect_fair_value_gaps(
     if not timestamps.is_monotonic_increasing:
         raise ValueError("bar timestamps must be chronological")
 
+    expected_interval = _expected_bar_interval(bars, timestamps)
+    intervals = timestamps.diff()
+
     high = pd.to_numeric(bars["high"], errors="coerce").to_numpy(dtype="float64")
     low = pd.to_numeric(bars["low"], errors="coerce").to_numpy(dtype="float64")
     if not np.isfinite(high).all() or not np.isfinite(low).all():
@@ -66,6 +98,13 @@ def detect_fair_value_gaps(
     threshold = float(min_gap_size)
     for right_index in range(2, len(bars)):
         left_index = right_index - 2
+        # Three-candle FVGs cannot span missing candles or trading-session gaps.
+        if (
+            intervals.iloc[right_index - 1] != expected_interval
+            or intervals.iloc[right_index] != expected_interval
+        ):
+            continue
+
         if low[right_index] > high[left_index]:
             gap_size = float(low[right_index] - high[left_index])
             if gap_size >= threshold and gap_size > 0:
