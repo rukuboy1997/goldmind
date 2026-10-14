@@ -144,25 +144,25 @@ def detect_liquidity_sweeps(
 
         for pivot in active_highs:
             level = float(pivot["price"])
-            if current_close > level:
-                # A close-through is a breakout, not a rejection sweep.
-                continue
-            if current_open <= level and current_high > level and current_close < level:
-                events.append(
-                    {
-                        "bar_index": bar_index,
-                        "timestamp": timestamps.iloc[bar_index],
-                        "sweep_type": "BUY_SIDE_SWEEP",
-                        "liquidity_type": "BUY_SIDE",
-                        "direction": "BEARISH",
-                        "level_price": level,
-                        "sweep_extreme": float(current_high),
-                        "close": float(current_close),
-                        "pivot_index": int(pivot["pivot_index"]),
-                        "pivot_timestamp": pivot["timestamp"],
-                        "pivot_confirmed_at": pivot["confirmed_at"],
-                    }
-                )
+            if current_high > level:
+                if current_open <= level and current_close < level:
+                    events.append(
+                        {
+                            "bar_index": bar_index,
+                            "timestamp": timestamps.iloc[bar_index],
+                            "sweep_type": "BUY_SIDE_SWEEP",
+                            "liquidity_type": "BUY_SIDE",
+                            "direction": "BEARISH",
+                            "level_price": level,
+                            "sweep_extreme": float(current_high),
+                            "close": float(current_close),
+                            "pivot_index": int(pivot["pivot_index"]),
+                            "pivot_timestamp": pivot["timestamp"],
+                            "pivot_confirmed_at": pivot["confirmed_at"],
+                        }
+                    )
+                # A penetrated level is retired even if its close is not a
+                # strict rejection; that first attempt is no longer reusable.
                 continue
             remaining_highs.append(pivot)
         active_highs = remaining_highs
@@ -170,25 +170,25 @@ def detect_liquidity_sweeps(
         remaining_lows: list[dict[str, object]] = []
         for pivot in active_lows:
             level = float(pivot["price"])
-            if current_close < level:
-                # A close-through is a breakout, not a rejection sweep.
-                continue
-            if current_open >= level and current_low < level and current_close > level:
-                events.append(
-                    {
-                        "bar_index": bar_index,
-                        "timestamp": timestamps.iloc[bar_index],
-                        "sweep_type": "SELL_SIDE_SWEEP",
-                        "liquidity_type": "SELL_SIDE",
-                        "direction": "BULLISH",
-                        "level_price": level,
-                        "sweep_extreme": float(current_low),
-                        "close": float(current_close),
-                        "pivot_index": int(pivot["pivot_index"]),
-                        "pivot_timestamp": pivot["timestamp"],
-                        "pivot_confirmed_at": pivot["confirmed_at"],
-                    }
-                )
+            if current_low < level:
+                if current_open >= level and current_close > level:
+                    events.append(
+                        {
+                            "bar_index": bar_index,
+                            "timestamp": timestamps.iloc[bar_index],
+                            "sweep_type": "SELL_SIDE_SWEEP",
+                            "liquidity_type": "SELL_SIDE",
+                            "direction": "BULLISH",
+                            "level_price": level,
+                            "sweep_extreme": float(current_low),
+                            "close": float(current_close),
+                            "pivot_index": int(pivot["pivot_index"]),
+                            "pivot_timestamp": pivot["timestamp"],
+                            "pivot_confirmed_at": pivot["confirmed_at"],
+                        }
+                    )
+                # A penetrated level is retired even if its close is not a
+                # strict rejection; that first attempt is no longer reusable.
                 continue
             remaining_lows.append(pivot)
         active_lows = remaining_lows
