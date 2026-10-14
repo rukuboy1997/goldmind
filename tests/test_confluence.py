@@ -132,3 +132,23 @@ def test_invalid_confluence_window_is_rejected(window: int) -> None:
         detect_confluence_candidates(
             bars, structures, sweeps, fvgs, max_bars_after_sweep=window
         )
+
+
+def test_duplicate_sweep_sequence_keeps_most_recent_sweep_once() -> None:
+    bars, structures, sweeps, fvgs = make_inputs()
+    later_sweep = {
+        "bar_index": 2,
+        "timestamp": bars.loc[2, "timestamp"],
+        "sweep_type": "SELL_SIDE_SWEEP",
+        "direction": "BULLISH",
+        "level_price": 99.0,
+        "sweep_extreme": 98.8,
+    }
+    sweeps = pd.concat([sweeps, pd.DataFrame([later_sweep])], ignore_index=True)
+
+    result = detect_confluence_candidates(bars, structures, sweeps, fvgs)
+
+    assert len(result) == 1
+    assert result.iloc[0]["sweep_bar_index"] == 2
+    assert result.iloc[0]["candidate_id"] == 1
+
