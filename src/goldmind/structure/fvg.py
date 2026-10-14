@@ -19,11 +19,11 @@ FVG_COLUMNS = (
 )
 
 _TIMEFRAME_INTERVALS = {
-    "M1": pd.Timedelta(minutes=1),
-    "M5": pd.Timedelta(minutes=5),
-    "M15": pd.Timedelta(minutes=15),
-    "H1": pd.Timedelta(hours=1),
-    "H4": pd.Timedelta(hours=4),
+    "M1": pd.Timedelta("1min"),
+    "M5": pd.Timedelta("5min"),
+    "M15": pd.Timedelta("15min"),
+    "H1": pd.Timedelta("1h"),
+    "H4": pd.Timedelta("4h"),
 }
 
 
