@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -19,15 +20,15 @@ FVG_COLUMNS = (
 )
 
 _TIMEFRAME_INTERVALS = {
-    "M1": pd.Timedelta("1min"),
-    "M5": pd.Timedelta("5min"),
-    "M15": pd.Timedelta("15min"),
-    "H1": pd.Timedelta("1h"),
-    "H4": pd.Timedelta("4h"),
+    "M1": timedelta(minutes=1),
+    "M5": timedelta(minutes=5),
+    "M15": timedelta(minutes=15),
+    "H1": timedelta(hours=1),
+    "H4": timedelta(hours=4),
 }
 
 
-def _expected_bar_interval(bars: pd.DataFrame, timestamps: pd.Series) -> pd.Timedelta:
+def _expected_bar_interval(bars: pd.DataFrame, timestamps: pd.Series) -> timedelta:
     """Infer the nominal candle interval, preferring explicit MT5 metadata."""
     if "timeframe" in bars.columns:
         frame_values = bars["timeframe"].dropna().astype(str).str.upper().unique()
@@ -37,14 +38,14 @@ def _expected_bar_interval(bars: pd.DataFrame, timestamps: pd.Series) -> pd.Time
             return _TIMEFRAME_INTERVALS[frame_values[0]]
 
     deltas = timestamps.diff().dropna()
-    deltas = deltas[deltas > pd.Timedelta(0)]
+    deltas = deltas[deltas > timedelta(0)]
     if deltas.empty:
         raise ValueError("cannot infer the candle interval from timestamps")
     counts = deltas.value_counts()
     most_common = counts[counts == counts.max()].index
     # On a tie, choose the shortest common interval so a session gap is not
     # mistaken for the nominal candle spacing.
-    return min(most_common)
+    return min(most_common).to_pytimedelta()
 
 
 def detect_fair_value_gaps(
