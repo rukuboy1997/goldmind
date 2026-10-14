@@ -137,3 +137,21 @@ def test_misaligned_swing_confirmation_timestamp_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="confirmed_at does not match"):
         detect_liquidity_sweeps(bars, swings)
+
+def test_touch_without_strict_rejection_consumes_level() -> None:
+    bars = make_high_sweep_bars()
+    bars.loc[3, ["open", "high", "low", "close"]] = [11.0, 12.5, 10.8, 12.0]
+    swings = make_swing(
+        bars,
+        pivot_index=1,
+        confirmation_index=2,
+        swing_type="HIGH",
+        price=12.0,
+    )
+
+    events = detect_liquidity_sweeps(bars, swings)
+
+    # The first penetration closes exactly at the level, so it is not a
+    # strict rejection sweep. The level must not trigger again on bar 4.
+    assert events.empty
+
