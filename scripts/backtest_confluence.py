@@ -20,10 +20,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run a research-only, bar-based backtest of GoldMind confluence candidates."
     )
-    parser.add_argument("--input", default="data/processed/XAUUSDmicro_M5_30d.parquet")
-    parser.add_argument("--output", default="data/processed/backtest_30d_trades.csv")
+    parser.add_argument("--input", default="data/processed/XAUUSD_M5.parquet")
+    parser.add_argument("--output", default="data/processed/backtest_trades.csv")
     parser.add_argument("--point-size", type=float, default=0.01,
-                        help="price units per broker point; currently 0.01 for XAUUSDmicro")
+                        help="price units per broker point; verify against your broker symbol (default assumption: 0.01)")
     parser.add_argument("--stop-buffer", type=float, default=0.20,
                         help="price units beyond the sweep extreme (baseline: 0.20)")
     parser.add_argument("--reward-risk", type=float, default=2.0,
