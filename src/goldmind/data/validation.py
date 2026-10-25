@@ -74,11 +74,15 @@ def validate_normalized_ohlcv(frame: pd.DataFrame) -> pd.DataFrame:
         if not np.isfinite(values).all():
             raise ValueError(f"{column} must contain finite numeric values")
 
-    if (result[["high"]] .to_numpy(dtype="float64").ravel() <
-            result[["open", "close"]].max(axis=1).to_numpy(dtype="float64")).any():
+    if (
+        result["high"].to_numpy(dtype="float64")
+        < result[["open", "close"]].max(axis=1).to_numpy(dtype="float64")
+    ).any():
         raise ValueError("high is below open/close")
-    if (result["low"].to_numpy(dtype="float64") >
-            result[["open", "close"]].min(axis=1).to_numpy(dtype="float64")).any():
+    if (
+        result["low"].to_numpy(dtype="float64")
+        > result[["open", "close"]].min(axis=1).to_numpy(dtype="float64")
+    ).any():
         raise ValueError("low is above open/close")
     if (result["low"] > result["high"]).any():
         raise ValueError("low is above high")
