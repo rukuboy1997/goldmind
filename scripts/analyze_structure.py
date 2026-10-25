@@ -17,7 +17,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Analyze swings, BOS/CHOCH, liquidity sweeps, FVGs, and confluence candidates from a GoldMind Parquet dataset."
     )
-    parser.add_argument("--input", default="data/processed/XAUUSDmicro_M5.parquet")
+    parser.add_argument("--input", default="data/processed/XAUUSD_M5.parquet")
     parser.add_argument("--left-bars", type=int, default=2)
     parser.add_argument("--right-bars", type=int, default=2)
     parser.add_argument("--min-fvg-size", type=float, default=0.0)
