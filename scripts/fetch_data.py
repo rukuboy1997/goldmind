@@ -47,9 +47,11 @@ def main() -> None:
         timeframe=args.timeframe,
     )
 
-    # MT5 may include the candle opening exactly at --end; use [start, end)
-    # so requests for a calendar day don't include the next day's 00:00 bar.
-    normalized = normalized.loc[normalized["timestamp"] < end].reset_index(drop=True)
+    # Enforce the half-open [start, end) interval even if a provider returns
+    # bars outside its requested range or includes the candle opening at --end.
+    normalized = normalized.loc[
+        (normalized["timestamp"] >= start) & (normalized["timestamp"] < end)
+    ].reset_index(drop=True)
     if normalized.empty:
         raise ValueError("No bars found inside the requested [start, end) interval")
 
